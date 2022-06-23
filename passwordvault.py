@@ -1,7 +1,8 @@
 import sqlite3
+import re
 options = int(
     input("Please select one option : \n 1) Register \n 2) Login \n "))
-
+reg = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{6,20}$"
 if options == 1:
     registeroptions = int(input(
         "Please select one option : \n 1) New User Registration \n 2) Re-set your password"))
@@ -10,35 +11,36 @@ if options == 1:
         password1 = input("Please enter your password: ")
         password2 = input("Please re-enter your password: ")
         if password1 == password2:
-            conn = sqlite3.connect("Password_vault.db")
-            c = conn.cursor()
-            c.execute('''
-          CREATE TABLE IF NOT EXISTS loginInfo
-          (username VARCHAR, password VARCHAR)
-          ''')
-           
-            data = []
-           
-            c.execute("SELECT username FROM loginInfo")
-            data = c.fetchall()
-            #here data is a list of tuples so we need to create another list that contains the items from tuples.
-            datalist = []
-            for i in data:
-                datalist.append(i[0])
             
-            if userID not in datalist:
+            if re.search(reg, password1):
+                conn = sqlite3.connect("Password_vault.db")
+                c = conn.cursor()
+                c.execute('''
+            CREATE TABLE IF NOT EXISTS loginInfo
+            (username VARCHAR, password VARCHAR)
+            ''')
+
+                data = []
+
+                c.execute("SELECT username FROM loginInfo")
+                data = c.fetchall()
+                # here data is a list of tuples so we need to create another list that contains the items from tuples.
+                datalist = []
+                for i in data:
+                    datalist.append(i[0])
+
+                if userID not in datalist:
                     c.execute("INSERT INTO loginInfo VALUES('" +
-                              userID + "','" + password1 + "' )")
+                            userID + "','" + password1 + "' )")
                     conn.commit()
-            else:
+                else:
                     print("user name already exists")
-                           
-            
-            
+            else:
+                print("Invalid password")
+
         else:
 
             print("Password did not match!!!")
-
 
     elif registeroptions == 2:
         print("Do you want to change your password?")
@@ -50,8 +52,6 @@ if options == 1:
         # userdata = c.fetchall()
         # print(userdata)
 
-
-        
         #setuser = ("""SELECT password FROM loginInfo WHERE username = ?""")
         #c.execute(setuser, [(userID)])
 
@@ -59,13 +59,14 @@ if options == 1:
             if row[0] == userPass:
                 newpassword1 = input("Please Enter your new password")
                 newpassword2 = input("Please RE-Enter your new password")
-                if newpassword1 == newpassword2:
-                    c.execute("""UPDATE loginInfo SET password = '{}' WHERE username = '{}'""".format(newpassword1,userID)) 
+                if newpassword1 == newpassword2 and re.search(reg, newpassword1):
+                    c.execute("""UPDATE loginInfo SET password = '{}' WHERE username = '{}'""".format(
+                        newpassword1, userID))
                     conn.commit()
                 else:
                     print("Password did not match!!!")
             else:
-                print("Invalid Password")    
+                print("Invalid Password")
 
 elif options == 2:
     username = input("Please enter your username: ")
@@ -74,10 +75,11 @@ elif options == 2:
     c = conn.cursor()
     for row in (c.execute("""SELECT password FROM loginInfo WHERE username = '{}'""".format(username))):
         if row[0] == password:
-            loginoptions = int(input("Please select one option: \n 1)Save New data \n 2)Retrieve data"))
+            loginoptions = int(
+                input("Please select one option: \n 1)Save New data \n 2)Retrieve data"))
             conn.commit()
             if loginoptions == 1:
-                service = input("Please enter the name of service: ")
+                service = input("Please enter the name of the service: ")
                 email = input("Please enter the emal-id: ")
                 userid = input("Please enter your userid: ")
                 password = input("Please enter the password: ")
@@ -87,7 +89,8 @@ elif options == 2:
                             CREATE TABLE IF NOT EXISTS userinfo
                                 (servicename VARCHAR, email VARCHAR, username VARCHAR, password VARCHAR)
                             ''')
-                c.execute("INSERT INTO userinfo VALUES ('" + service + "', '" + email + "', '" + username + "','" + password + "')")
+                c.execute("INSERT INTO userinfo VALUES ('" + service +
+                          "', '" + email + "', '" + username + "','" + password + "')")
                 print("Successfully added")
                 conn.commit()
             elif loginoptions == 2:
