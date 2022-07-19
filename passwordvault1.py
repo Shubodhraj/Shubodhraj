@@ -3,15 +3,21 @@ import re
 
 reg = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{6,20}$"
 
-
+def connect1():
+                    conn = sqlite3.connect("passwords_database.db")
+                    c = conn.cursor()
+                    return conn, c
+                    
 def register():
             userid = input("Please enter your ID: ")
             pass1 = input("Please enter your Password: ")
             pass2 = input("Please re-enter your Password: ")
 
             if pass1 == pass2 and re.search(reg, pass1):
-                conn = sqlite3.connect("passwords_database.db")
-                c = conn.cursor()
+                
+                conn, c = connect1()                
+                
+                    
                 c.execute("CREATE TABLE IF NOT EXISTS LoginTable(userid VARCHAR, pass1 VARCHAR)")
                 data = []
                 for record in(c.execute('''SELECT userid FROM LoginTable''')):
@@ -23,8 +29,9 @@ def register():
 
                     c.execute("INSERT INTO LoginTable VALUES('" +
                                     userid + "','" + pass1 + "')")
+                                    
                     conn.commit()
-                    c.close()
+                    conn.close()
                 else:
                     print("User already exists!!")
             else:
@@ -35,9 +42,9 @@ def chagepassword():
             userid = input("Please enter your user ID: ")
             password = input("Please enter your password: ")
             
-            conn = sqlite3.connect("passwords_database.db")
-            c = conn.cursor()
-            
+            # conn = sqlite3.connect("passwords_database.db")
+            # c = conn.cursor()
+            conn, c = connect1()
             for row in(c.execute("SELECT pass1 from LoginTable WHERE userid = '{}'".format(userid))):
                 
                 if row[0] == password:
@@ -56,12 +63,13 @@ def chagepassword():
 def login():
     userid = input("Please enter your user name: ")
     pass1 = input("please enter your password: ")
-    conn = sqlite3.connect("passwords_database.db")
-    c = conn.cursor()
+    # conn = sqlite3.connect("passwords_database.db")
+    # c = conn.cursor()
+    conn, c = connect1()
     for row in(c.execute("""SELECT pass1 from LoginTable WHERE userid = '{}'""".format(userid))):
         if row[0] == pass1:
             print("Login Success!!!")
-            
+            conn.commit()
     
             loginoptions = int(input("Please select one option: \n 1) New Entry \n 2) View Entries \n"))
             if loginoptions == 1:
@@ -70,6 +78,8 @@ def login():
                 viewentry()
             else:
                 print("Invalid option")
+        else:
+            print("Username or Password did not match")
             
 def newentry():
     #s = service 
@@ -77,16 +87,18 @@ def newentry():
     s_email = input("Please enter the email used for the service: ")
     s_userid = input("Please enter your user name of the service: ")
     s_pass = input("Please enter the password of the service:  ")
-    conn = sqlite3.connect("passwords_database.db")
-    c = conn.cursor()
+    # conn = sqlite3.connect("passwords_database.db")
+    # c = conn.cursor()
+    conn, c = connect1()
     c.execute("CREATE TABLE IF NOT EXISTS userinfo(s_name VARCHAR, s_email VARCHAR, s_userid VARCHAR, s_pass VARCHAR)")
     c.execute("INSERT INTO userinfo VALUES('"+s_name+"', '"+s_email+"','"+s_userid+"', '"+s_pass+"')")
     conn.commit()
     print("Successfully Added")
     
 def viewentry():
-    conn = sqlite3.connect("passwords_database.db")
-    c = conn.cursor()
+    # conn = sqlite3.connect("passwords_database.db")
+    # c = conn.cursor()
+    conn, c = connect1()
     c.execute("SELECT * FROM userinfo")
     data = c.fetchall()
     for d in data:
